@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSE Client</title>
+  </head>
+  <body>
+    <h1>Server-Sent Events</h1>
+    <div id="events"></div>
+    <div id="online"></div>
+
+    <script>
+      const eventSource = new EventSource("http://localhost:8080/messageChannel");
+
+      eventSource.onmessage = (event) => {
+        const eventsDiv = document.getElementById("events");
+        const newEvent = document.createElement("p");
+        newEvent.textContent = event.data;
+        eventsDiv.appendChild(newEvent);
+      };
+
+      eventSource.onerror = () => {
+        console.error("SSE connection lost");
+      };
+    </script>
+    <script>
+      const eventource = new EventSource("http://localhost:8080/onlineCount");
+
+      eventource.onmessage = (event) => {
+        const eventsDiv = document.getElementById("online");
+        const newEvent = document.createElement("p");
+        newEvent.textContent = event.data;
+        eventsDiv.appendChild(newEvent);
+      };
+
+      eventource.onerror = () => {
+        console.error("SSE connection lost");
+      };
+    </script>
+  </body>
+</html>
