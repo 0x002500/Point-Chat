@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point-Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #username {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        #message {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        #sendMessage {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #sendMessage:hover {
+            background-color: #0056b3;
+        }
+
+        #messages {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .message:last-child {
+            border-bottom: none;
+        }
+
+        .message span {
+            font-weight: bold;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <h1>Point-Chat</h1>
+
+    <input type="text" id="username" placeholder="Enter your username">
+
+    <textarea id="message" placeholder="Type your message here" rows="3"></textarea>
+
+    <button id="sendMessage">Send Message</button>
+
+    <div id="messages"></div>
+
+    <script>
+        const usernameInput = document.getElementById('username');
+        const messageInput = document.getElementById('message');
+        const sendMessageButton = document.getElementById('sendMessage');
+        const messagesDiv = document.getElementById('messages');
+        const serverAddr = 'http://localhost:8080'
+
+        function appendMessage(user, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = `<span>${user}</span>: ${message}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the bottom of the messages
+        }
+
+        const eventSource = new EventSource(`${serverAddr}/messageChannel`);
+
+        eventSource.onmessage = function(event) {
+            const [user, message] = event.data.split(':');
+            appendMessage(user.trim(), message.trim());
+        };
+
+        function sendMessage() {
+            const user = usernameInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!user || !message) {
+                alert('Please enter both username and message.');
+                return;
+            }
+
+            fetch(`${serverAddr}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user, message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'Message sent to all clients') {
+                    messageInput.value = ''; // Clear the message input field
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        sendMessageButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

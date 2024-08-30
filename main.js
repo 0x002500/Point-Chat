@@ -6,24 +6,32 @@ const emitter = new events.EventEmitter();
 
 // Function to set CORS headers on the response
 function setCORSHeaders(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.setHeader("Access-Control-Request-Method", "*"); // Allow all request methods
-  res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST"); // Specify allowed methods
-  res.setHeader("Access-Control-Allow-Headers", "*"); // Allow all headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST");
+  res.setHeader("Access-Control-Allow-Headers", "*");
 }
 
 // Handle GET requests to /messageChannel
 function handleMessageChannel(req, res) {
-  // Set response headers for Server-Sent Events (SSE)
+  // Set headers for Server-Sent Events (SSE)
   res.writeHead(200, {
     "Content-Type": "text/event-stream", // Content type for SSE
     "Cache-Control": "no-cache", // Disable caching
     "Connection": "keep-alive", // Keep the connection open
   });
 
-  // Listen for 'newMessage' events and send them to the client
-  emitter.on("newMessage", (userName, message) => {
-    res.write(`${userName}: ${message}\n`); // Send the message as a new line in the response
+  // Define a listener to send new messages to the client
+  const messageListener = (userName, message) => {
+    const formattedMessage = `data: ${userName}: ${message}\n\n`;
+    res.write(formattedMessage); // Send the formatted message
+  };
+
+  // Register the listener
+  emitter.on("newMessage", messageListener);
+
+  // Remove the listener when the client closes the connection
+  req.on("close", () => {
+    emitter.removeListener("newMessage", messageListener);
   });
 }
 
@@ -31,27 +39,32 @@ function handleMessageChannel(req, res) {
 function handleSendMessage(req, res) {
   let body = "";
 
-  // Collect data chunks from the request body
+  // Collect chunks of data from the request body
   req.on("data", (chunk) => {
-    body += chunk.toString(); // Convert each chunk to a string and append it to body
+    body += chunk.toString();
   });
 
-  // When all data has been received, process it
+  // Process data when fully received
   req.on("end", () => {
     try {
-      // Parse the JSON data received in the request body
       const { user, message } = JSON.parse(body);
 
-      // Emit a 'newMessage' event with the user and message
+      if (!user || !message) {
+        throw new Error("Missing user or message");
+      }
+
+      // Emit 'newMessage' event to broadcast to all clients
       emitter.emit("newMessage", user, message);
 
-      // Send a success response
+      // Respond to the client
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ status: "Message sent to all clients" }));
     } catch (error) {
-      // Handle any JSON parsing errors
+      // Handle errors, such as invalid JSON
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "Invalid JSON data" }));
+      res.end(
+        JSON.stringify({ status: "Invalid JSON data", error: error.message }),
+      );
     }
   });
 }
@@ -63,16 +76,16 @@ const server = http.createServer((req, res) => {
 
   // Handle OPTIONS requests for CORS preflight
   if (req.method === "OPTIONS") {
-    res.writeHead(200); // Respond with 200 OK for preflight checks
+    res.writeHead(200);
     res.end();
     return;
   }
 
   // Route requests based on method and URL
   if (req.method === "GET" && req.url === "/messageChannel") {
-    handleMessageChannel(req, res); // Handle GET requests to /messageChannel
+    handleMessageChannel(req, res);
   } else if (req.method === "POST" && req.url === "/sendMessage") {
-    handleSendMessage(req, res); // Handle POST requests to /sendMessage
+    handleSendMessage(req, res);
   } else {
     // Handle any other requests with a 404 Not Found response
     res.writeHead(404, { "Content-Type": "text/plain" });
