@@ -1,4 +1,3 @@
-// Import the HTTP and events modules
 const http = require("http");
 const events = require("events");
 
@@ -61,6 +60,13 @@ function handleSendMessage(req, res) {
 const server = http.createServer((req, res) => {
   // Set CORS headers for every request
   setCORSHeaders(res);
+
+  // Handle OPTIONS requests for CORS preflight
+  if (req.method === "OPTIONS") {
+    res.writeHead(200); // Respond with 200 OK for preflight checks
+    res.end();
+    return;
+  }
 
   // Route requests based on method and URL
   if (req.method === "GET" && req.url === "/messageChannel") {
