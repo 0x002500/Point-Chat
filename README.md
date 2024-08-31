@@ -1,14 +1,13 @@
-**This a README genorate by ChatGPT, there are many serious problem.DO NOT floow the README until this line text disappear**
-
 # Point-Chat
 
-Point-Chat is a real-time chat application that uses Server-Sent Events (SSE) for live message updates and a basic HTTP server for handling chat messages. This project demonstrates a simple chat application with live updates, implemented in Node.js.
+Point-Chat is a real-time chat application that uses Server-Sent Events (SSE) for live message updates and a basic HTTP server for handling chat messages. This project creates a simple chat application with live updates, implemented in Node.js.
 
 ## Features
 
-- **Real-time Chat**: Users can send and receive messages in real-time using Server-Sent Events (SSE).
-- **CORS Support**: Handles Cross-Origin Resource Sharing (CORS) to allow interactions from different origins.
-- **Message Broadcasting**: All messages are broadcasted to all connected clients.
+- **Private**: The server only broadcasts the message to other clients without saving messages or logs.
+- **Lightweight**: No additional dependencies, just simple HTML/CSS/JS.
+- **Edge Friendly**: Feel free to deploy it on edge platforms. (WIP on Cloudflare Workers)
+- **Secure**: End-to-End encryption (WIP).
 
 ## Project Structure
 
@@ -51,49 +50,8 @@ Point-Chat is a real-time chat application that uses Server-Sent Events (SSE) fo
 
 Messages will be displayed in real-time in the message area.
 
-## API Endpoints
-
-- **GET /messageChannel**: Establishes an SSE connection for receiving real-time messages.
-- **POST /sendMessage**: Accepts a JSON payload with `user` and `message` fields. Broadcasts the message to all connected clients.
-
-### Example Request to POST /sendMessage
-
-```json
-POST http://localhost:8080/sendMessage
-Content-Type: application/json
-
-{
-  "user": "Alice",
-  "message": "Hello, world!"
-}
-```
-
-### Example Response
-
-```json
-{
-  "status": "Message sent to all clients"
-}
-```
-
-## Error Handling
-
-- **Invalid JSON**: Returns a 400 status code with an error message if the JSON payload is invalid.
-- **Other Errors**: Returns a 404 status code for unknown routes.
-
 ## Contributing
-
-Feel free to submit issues or pull requests to improve the project. Contributions are welcome!
+Feel free to open an issue or a Pull Request. I will check them when I'm free.
 
 ## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgements
-
-- [Node.js](https://nodejs.org/) for the runtime environment.
-- [MDN Web Docs](https://developer.mozilla.org/) for documentation on JavaScript and HTTP.
-
----
-
-Replace `https://github.com/yourusername/point-chat.git` with the actual URL of your repository. If you have additional features, dependencies, or setup instructions, feel free to add them accordingly.
+This application is under the [MIT License](https://github.com/0x002500/Point-Chat/blob/main/LICENSE).
